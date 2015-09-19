@@ -1,14 +1,23 @@
 import java.io.BufferedReader
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkConf
+import org.apache.spark.rdd.RDD
+import org.apache.log4j.Logger
+import org.apache.log4j.Level
 
+/**
+ * The command-line user interface for Accio.
+ * @author Owen Jow
+ */
 object AccioUI {
     var shouldQuit: Boolean = false
-    var bookFilepath: String = "harry_potter_bookset"
+    var folderFilepath: String = "harry_potter_bookset"
     val helpStr: String = """quit: Quits the program.
             |help: Provides the list of commands that you're seeing right now.""".stripMargin
     
     def main(args: Array[String]) {
         println("Welcome to Accio!")
-        print("Would you like to specify your own path to the book data? [y/n]: ")
+        print("Would you like to specify your own path to the book data directory? [y/n]: ")
         
         val br: BufferedReader = Console.in
         var line: String = br.readLine()
@@ -20,13 +29,27 @@ object AccioUI {
         // Either get the user's filepath or indicate usage of the default one
         if (line == "y") {
             print("Enter a filepath: ")
-            var bookFilepath = br.readLine()
-            println("Okay, we'll use \"" + bookFilepath + "\" as the filepath.")
+            var folderFilepath = br.readLine()
+            println("Okay, we'll use \"" + folderFilepath + "\" as the folder filepath.")
         } else {
-            println("Okay, we'll use the default filepath (" + bookFilepath + ").")
+            println("Okay, we'll use the default folder filepath (" + folderFilepath + ").")
         }
         
+        // Turn off log output real fast
+        Logger.getLogger("org").setLevel(Level.WARN)
+        Logger.getLogger("akka").setLevel(Level.WARN)
+        
+        // Set up Spark and book file RDDs
         println("\nStarting up AccioDB; please wait......")
+        println("[BEGIN] SPARK LOG OUTPUT >>>>>>\n")
+        val conf = new SparkConf().setAppName("AccioDB")
+        val sc = new SparkContext(conf)
+        val books: Array[RDD[String]] = new Array[RDD[String]](7)
+        for (i <- 0 to 6) {
+            books(i) = sc.textFile(folderFilepath + "/book" + (i + 1) + ".txt")
+        }
+        
+        println("\n>>>>>> [END] SPARK LOG OUTPUT")
         println("AccioDB launched! Remember, help will always be given at Hogwarts to those who ask for it.")
         
         while (!shouldQuit) {
@@ -36,11 +59,11 @@ object AccioUI {
             var command: String = tokens(0)
             tokens = tokens.drop(1)
             
-            executeCommand(command, tokens)
+            executeCommand(command, tokens, books)
         }
     }
     
-    def executeCommand(command: String, tokens: Array[String]) {
+    def executeCommand(command: String, tokens: Array[String], books: Array[RDD[String]]) {
         command match {
             case "quit" => shouldQuit = true
             case "help" => println(helpStr)
