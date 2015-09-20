@@ -10,7 +10,9 @@ object SparkSearcher {
     def count(books: Array[RDD[String]], phrase: String): Long = {
         var count: Long = 0
         for (i <- 0 to books.length - 1) {
-            count += books(i).filter(line => line.contains(phrase)).count()
+            count += books(i).map(
+                line => phrase.r.findAllMatchIn(line).length
+            ).reduce(_ + _)
         }
         
         return count
