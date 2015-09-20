@@ -13,7 +13,8 @@ object AccioUI {
     var shouldQuit: Boolean = false
     var folderFilepath: String = "harry_potter_bookset"
     val helpStr: String = """quit: Quits the program.
-            |help: Provides the list of commands that you're seeing right now.""".stripMargin
+            |help: Provides the list of commands that you're seeing right now.
+            |count [phrase]: Counts the number of times the given phrase appears throughout all seven books.""".stripMargin
     
     def main(args: Array[String]) {
         println("Welcome to Accio!")
@@ -35,7 +36,7 @@ object AccioUI {
             println("Okay, we'll use the default folder filepath (" + folderFilepath + ").")
         }
         
-        // Turn off log output real fast
+        // Disable (most) log output
         Logger.getLogger("org").setLevel(Level.WARN)
         Logger.getLogger("akka").setLevel(Level.WARN)
         
@@ -46,7 +47,7 @@ object AccioUI {
         val sc = new SparkContext(conf)
         val books: Array[RDD[String]] = new Array[RDD[String]](7)
         for (i <- 0 to 6) {
-            books(i) = sc.textFile(folderFilepath + "/book" + (i + 1) + ".txt")
+            books(i) = sc.textFile(folderFilepath + "/book" + (i + 1) + ".txt").cache()
         }
         
         println("\n>>>>>> [END] SPARK LOG OUTPUT")
@@ -67,6 +68,7 @@ object AccioUI {
         command match {
             case "quit" => shouldQuit = true
             case "help" => println(helpStr)
+            case "count" => println(SparkSearcher.count(books, tokens(0)))
             case other => println("Unrecognized command: " + other + "\nType \"help\" for a list of commands.")
         }
         
