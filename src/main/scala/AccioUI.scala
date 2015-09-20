@@ -13,8 +13,8 @@ object AccioUI {
     var shouldQuit: Boolean = false
     var folderFilepath: String = "harry_potter_bookset"
     val helpStr: String = """quit: Quits the program.
-            |help: Displays the list of commands that you're seeing right now.
-            |count [phrase]: Counts the number of times the given phrase appears throughout all seven books.""".stripMargin
+            |help [COMMAND]: Displays the list of commands that you're seeing right now.
+            |count [-b book_num] PHRASE: Counts the number of times the given phrase appears throughout all seven books.""".stripMargin
     
     def main(args: Array[String]) {
         println("Welcome to Accio!")
@@ -67,14 +67,52 @@ object AccioUI {
     def executeCommand(command: String, tokens: Array[String], books: Array[RDD[String]]) {
         command match {
             case "quit" => shouldQuit = true
-            case "help" => println(helpStr)
+            case "help" => 
+                if (tokens.length > 0) {
+                    // Presumably the user wants information about a specific command
+                    tokens(0) match {
+                        case "quit" => println("""Usage: quit
+                                |Quits the program. When this happens,
+                                |the prompt will disappear and all session data will be lost.""".stripMargin)
+                        case "count" => println("""Usage: count [-b book_num] PHRASE
+                                |If the [-b booknum] option is specified, searches the given book (#1 to #7)
+                                |for PHRASE and displays the number of appearances within that one book. 
+                                |Otherwise (if no -b flag), counts the number of times PHRASE occurs 
+                                |throughout all seven books.
+                                |
+                                |Ex. usage) count -b 1 Fluffy <-- counts the # of 'Fluffy's in book 1
+                                |Ex. usage) count -b 5 Harry shouted <-- counts the # of 'Harry shouted's in book 5""".stripMargin)
+                        case other => println(s"""Unrecognized command: ${other}.
+                                |Displaying general help string:
+                                |
+                                |$helpStr""".stripMargin)
+                    }
+                } else {
+                    println(helpStr) // general help string
+                }
             case "count" => 
-                if (tokens.length == 0) {
-                    println("[ERROR] Usage: count [phrase]")
+                if (tokens.length >= 3 && tokens(0) == "-b") {
+                    var bookNum: Int = 0
+                    try {
+                        bookNum = tokens(1).toInt
+                    } catch {
+                        case e: Exception => println("[ERROR] book_num must be an integer.\n")
+                        return
+                    }
+                    
+                    if (bookNum < 1 || bookNum > 7) {
+                        // That's not a Harry Potter book!
+                        println("[ERROR] book_num must be an integer between 1 and 7.\n")
+                        return
+                    }
+                    
+                    println(SparkSearcher.count(Array(books(bookNum - 1)), tokens.drop(2).mkString(" ")))
+                } else if (tokens.length == 0) {
+                    println("[ERROR] Usage: count [-b book_num] PHRASE")
                 } else {
                     println(SparkSearcher.count(books, tokens.mkString(" ")))
                 }
-            case other => println("[ERROR] Unrecognized command: " + other + "\nType \"help\" for a list of commands.")
+            case other => println("[ERROR] Unrecognized command: " + other + "\nType `help' for a list of commands.")
         }
         
         if (!shouldQuit) {

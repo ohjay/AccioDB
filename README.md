@@ -6,7 +6,7 @@ AccioDB runs as a command line UI. Accordingly, in order to interact with it the
 
 Full list of current commands (of course, more can always be added!):<br>
 ```
-quit; help; count [phrase]
+quit; help [COMMAND]; count [-b book_num] PHRASE
 ```
 
 The program uses Apache Spark to process [the book text](#disclaimer), with the aim that users will be able to see results faster than they can say "Quidditch".
@@ -27,12 +27,13 @@ Once you have done this, AccioDB will run a bit of Spark setup and then you will
 
 - **quit**
   - Quits the program. 
-- **help**
+- **help [COMMAND]**
   - Provides a list of commands/arguments.
-- **count [phrase]**
-  - Counts the number of times PHRASE appears in all seven books. This might be used as a rough measure of significance for a word/phrase (as a benchmark, the word "Harry" appears 18165 times in 15701 lines).
+- **count [-b book_num] PHRASE**
+  - Counts the number of times PHRASE appears in all seven books (or, optionally, a single book). This might be used as a rough measure of significance for a word/phrase (as a benchmark, the word "Harry" appears 18165 times in 15701 lines).
   - Example usage #1: `count Quidditch # counts the number of times "Quidditch" is mentioned (output: 421)`
   - Example usage #2: `count the Whomping Willow # counts the number of occurrences of "the Whomping Willow" (output: 20)`
+  - Example usage #3: `count -b 5 Harry yelled # counts the number of times Harry yells in book 5 (output: 14)`
 
 ## Disclaimer
 Due to a bunch of legal stuff that I'm not about to get into, I'm not allowed to upload the actual Harry Potter books here. Thus in order for you to use AccioDB yourself, you would have to either **(a)** find the .txt files yourself online, or **(b)** type up the text of all seven books yourself. Sorry!
