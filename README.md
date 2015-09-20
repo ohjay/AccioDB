@@ -31,8 +31,8 @@ Once you have done this, AccioDB will run a bit of Spark setup and then you will
   - Provides a list of commands/arguments.
 - **count [phrase]**
   - Counts the number of times PHRASE appears in all seven books. This might be used as a rough measure of significance for a word/phrase (as a benchmark, the word "Harry" appears 18165 times in 15701 lines).
-  - Example usage #1: `count Quidditch # counts the number of times "Quidditch" is mentioned`
-  - Example usage #2: `count "the Whomping Willow" # counts the number of occurrences of "the Whomping Willow"`
+  - Example usage #1: `count Quidditch # counts the number of times "Quidditch" is mentioned (output: 421)`
+  - Example usage #2: `count the Whomping Willow # counts the number of occurrences of "the Whomping Willow" (output: 20)`
 
 ## Disclaimer
 Due to a bunch of legal stuff that I'm not about to get into, I'm not allowed to upload the actual Harry Potter books here. Thus in order for you to use AccioDB yourself, you would have to either **(a)** find the .txt files yourself online, or **(b)** type up the text of all seven books yourself. Sorry!

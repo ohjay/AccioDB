@@ -69,10 +69,10 @@ object AccioUI {
             case "quit" => shouldQuit = true
             case "help" => println(helpStr)
             case "count" => 
-                if (tokens.length == 1) {
-                    println(SparkSearcher.count(books, tokens(0)))
-                } else {
+                if (tokens.length == 0) {
                     println("[ERROR] Usage: count [phrase]")
+                } else {
+                    println(SparkSearcher.count(books, tokens.mkString(" ")))
                 }
             case other => println("[ERROR] Unrecognized command: " + other + "\nType \"help\" for a list of commands.")
         }
