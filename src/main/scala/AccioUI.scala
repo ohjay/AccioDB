@@ -13,7 +13,7 @@ object AccioUI {
     var shouldQuit: Boolean = false
     var folderFilepath: String = "harry_potter_bookset"
     val helpStr: String = """quit: Quits the program.
-            |help: Provides the list of commands that you're seeing right now.
+            |help: Displays the list of commands that you're seeing right now.
             |count [phrase]: Counts the number of times the given phrase appears throughout all seven books.""".stripMargin
     
     def main(args: Array[String]) {
@@ -68,8 +68,13 @@ object AccioUI {
         command match {
             case "quit" => shouldQuit = true
             case "help" => println(helpStr)
-            case "count" => println(SparkSearcher.count(books, tokens(0)))
-            case other => println("Unrecognized command: " + other + "\nType \"help\" for a list of commands.")
+            case "count" => 
+                if (tokens.length == 1) {
+                    println(SparkSearcher.count(books, tokens(0)))
+                } else {
+                    println("[ERROR] Usage: count [phrase]")
+                }
+            case other => println("[ERROR] Unrecognized command: " + other + "\nType \"help\" for a list of commands.")
         }
         
         if (!shouldQuit) {
