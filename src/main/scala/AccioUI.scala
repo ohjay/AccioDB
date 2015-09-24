@@ -14,7 +14,8 @@ object AccioUI {
     var folderFilepath: String = "harry_potter_bookset"
     val helpStr: String = """quit: Quits the program.
             |help [COMMAND]: Displays the list of commands that you're seeing right now.
-            |count [-b book_num] PHRASE: Counts the number of times the given phrase appears throughout all seven books.""".stripMargin
+            |count [-b book_num] PHRASE: Counts the number of times the given phrase appears throughout all seven books.
+            |sentences [-b book_num] PHRASE: Returns the set of all sentences that contain PHRASE.""".stripMargin
     
     def main(args: Array[String]) {
         println("Welcome to Accio!")
@@ -69,7 +70,7 @@ object AccioUI {
             case "quit" => shouldQuit = true
             case "help" => 
                 if (tokens.length > 0) {
-                    // Presumably the user wants information about a specific command
+                    // The user presumably wants information about a specific command
                     tokens(0) match {
                         case "quit" => println("""Usage: quit
                                 |Quits the program. When this happens,
@@ -82,6 +83,12 @@ object AccioUI {
                                 |
                                 |Ex. usage) count -b 1 Fluffy <-- counts the # of 'Fluffy's in book 1
                                 |Ex. usage) count -b 5 Harry shouted <-- counts the # of 'Harry shouted's in book 5""".stripMargin)
+                        case "sentences" => println("""Usage: sentences [-b book_num] PHRASE
+                                |Returns a set of all sentences that contain PHRASE. If the [-b booknum] option
+                                |is specified, such sentences will be limited to the given book (#1 to #7).
+                                |
+                                |Ex. usage) sentences After all this time <-- we all know which sentence this will return
+                                |Ex. usage) sentences -b 2 Dobby <-- outputs all sentences involving Dobby from book 2""".stripMargin)
                         case other => println(s"""Unrecognized command: ${other}.
                                 |Displaying general help string:
                                 |
@@ -112,6 +119,7 @@ object AccioUI {
                 } else {
                     println(SparkSearcher.count(books, tokens.mkString(" ")))
                 }
+            case "sentences" => println("This function is not functional yet.")
             case other => println("[ERROR] Unrecognized command: " + other + "\nType `help' for a list of commands.")
         }
         

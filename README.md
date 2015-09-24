@@ -1,12 +1,13 @@
 # AccioDB
-AccioDB is an easy-to-use Scala interface for Harry Potter book data, conceived as an exercise in both Scala and MapReduce.
+AccioDB is an easy-to-use query interface for Harry Potter book data, conceived as an exercise in both Scala programming and Apache Spark's distributed processing facilities.
 
 ## Features; Implementation
 AccioDB runs as a command line UI. Accordingly, in order to interact with it the user must enter commands (and sometimes arguments). Using these, the user can acquire information such as "the number of times Neville is mentioned in the story" or "all quotes by Albus Dumbledore". Useful, don't you think? If you _don't_ think, I pity you... along with all those who live without love.
 
 Full list of current commands (of course, more can always be added!):<br>
 ```
-quit; help [COMMAND]; count [-b book_num] PHRASE
+quit; help [COMMAND]; count [-b book_num] PHRASE;
+sentences [-b book_num] PHRASE
 ```
 
 The program uses Apache Spark to process [the book text](#disclaimer), with the aim that users will be able to see results faster than they can say "Quidditch".
@@ -34,6 +35,10 @@ Once you have done this, AccioDB will run a bit of Spark setup and then you will
   - Example usage #1: `count Quidditch # counts the number of times "Quidditch" is mentioned (output: 421)`
   - Example usage #2: `count the Whomping Willow # counts the number of occurrences of "the Whomping Willow" (output: 20)`
   - Example usage #3: `count -b 5 Harry yelled # counts the number of times Harry yells in book 5 (output: 14)`
+- **sentences [-b book_num] PHRASE**
+  - Returns all sentences containing PHRASE. If the -b flag is specified, the sentences will be limited to the given book (#1 to #7).
+  - Example usage #1: `sentences After all this time? # we all know which sentence this will return`
+  - Example usage #2: `sentences -b 2 Dobby # outputs all sentences from CoS that involve Dobby`
 
 ## Disclaimer
 Due to a bunch of legal stuff that I'm not about to get into, I'm not allowed to upload the actual Harry Potter books here. Thus in order for you to use AccioDB yourself, you would have to either **(a)** find the .txt files yourself online, or **(b)** type up the text of all seven books yourself. Sorry!

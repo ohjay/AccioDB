@@ -17,4 +17,10 @@ object SparkSearcher {
         
         return count
     }
+    
+    def get_sentences_with(books: Array[RDD[String]], phrase: String): Array[String] = {
+        var sentences: Array[String] = Array[String]()
+        /* Insert sentence-finding logic here */
+        return sentences
+    }
 }
