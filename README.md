@@ -6,8 +6,9 @@ AccioDB runs as a command line UI. Accordingly, in order to interact with it the
 
 Full list of current commands (of course, more can always be added!):<br>
 ```
-quit; help [COMMAND]; count [-b book_num] PHRASE;
-sentences [-b book_num] PHRASE
+quit
+help [COMMAND]
+count [-b book_num] PHRASE
 ```
 
 The program uses Apache Spark to process [the book text](#disclaimer), with the aim that users will be able to see results faster than they can say "Quidditch".
@@ -35,17 +36,6 @@ Once you have done this, AccioDB will run a bit of Spark setup and then you will
   - Example usage #1: `count Quidditch # counts the number of times "Quidditch" is mentioned (output: 421)`
   - Example usage #2: `count the Whomping Willow # counts the number of occurrences of "the Whomping Willow" (output: 20)`
   - Example usage #3: `count -b 5 Harry yelled # counts the number of times Harry yells in book 5 (output: 14)`
-- **sentences [-b book_num] PHRASE**
-  - Returns all sentences containing PHRASE. If the -b flag is specified, the sentences will be limited to the given book (#1 to #7).
-  - Example usage #1: `sentences After all this time? # we all know which sentence this will return`
-  - Example usage #2: `sentences -b 2 Dobby # outputs all sentences from CoS that involve Dobby`
 
 ## Disclaimer
 Due to a bunch of legal stuff that I'm not about to get into, I'm not allowed to upload the actual Harry Potter books here. Thus in order for you to use AccioDB yourself, you would have to either **(a)** find the .txt files yourself online, or **(b)** type up the text of all seven books yourself. Sorry!
-
-## Demo Video
-[coming soon! For now, enjoy the video below]
-
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=-ZsIiuuAACw
-" target="_blank"><img src="http://img.youtube.com/vi/-ZsIiuuAACw/0.jpg" 
-alt="AccioDB demo video" width="240" height="180" border="10" /></a>
