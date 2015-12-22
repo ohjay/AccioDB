@@ -15,7 +15,8 @@ object AccioUI {
     val helpStr: String = """quit: Quits the program.
             |help [COMMAND]: Displays the list of commands that you're seeing right now.
             |count [-b book_num] PHRASE: Counts the number of times the given phrase appears throughout all seven books.
-            |word_dist [-a] [-n top_n_words] BOOK_NUM: Lists words by frequency of appearance in a given book.""".stripMargin
+            |word_dist [-a] [-n top_n_words] BOOK_NUM: Lists words by frequency of appearance in a given book.
+            |stat STAT_OPTION: Prints statistics related to the book text.""".stripMargin
     
     /**
      * Launches the program. Contains the outermost logic for the read-eval-print loop.
@@ -202,6 +203,16 @@ object AccioUI {
                                 |Ex. usage) word_dist -an 9 2 <-- lists the 9 least common words in CoS
                                 |Ex. usage) word_Dist -a -n 15 2 <-- lists the 15 least common words in CoS
                                 |Ex. usage) word_Dist -a 7 <-- lists the 100 least common words in DH""".stripMargin)
+                        case "stat" => println("""Usage: stat STAT_OPTION
+                                |Prints text-related statistics.
+                                |The statistic displayed will depend on STAT_OPTION.
+                                |
+                                |Stat options include:
+                                |- UNIQUE_WORDS: Returns the number of unique words throughout all seven books.
+                                |- UNIQUE_WORDS [booknum]: Returns the number of unique words within book BOOK_NUM.
+                                |
+                                |Ex. usage) stat UNIQUE_WORDS <-- outputs the number of unique words throughout all 7 books
+                                |Ex. usage) stat UNIQUE_WORDS 5 <-- outputs the number of unique words in OotP""".stripMargin)
                         case other => println(s"""Unrecognized command: ${other}.
                                 |Displaying general help string:
                                 |
@@ -315,6 +326,28 @@ object AccioUI {
                 } catch {
                     case e: ArrayIndexOutOfBoundsException => 
                         println("[ERROR] Usage: word_dist [-a] [-n top_n_words] BOOK_NUM")
+                }
+            case "stat" =>
+                if (tokens.length == 0) {
+                    println("[ERROR] Usage: stat STAT_OPTION")
+                    println("STAT_OPTION is required!")
+                } else if (tokens(0) == "UNIQUE_WORDS") {
+                    // In which we display the number of unique words within certain HP books
+                    if (tokens.length > 1) {
+                        // That is, if the user is trying to specify a book number
+                        val bookNum: Int = parseBookNum(tokens(1))
+                        if (bookNum == -1) {
+                            return
+                        }
+                        
+                        println(SparkSearcher.numUniqueWords(Array(books(bookNum - 1))))
+                    } else {
+                        // That is, if the user is trying to say "give me the # of unique words in ALL books"
+                        println(SparkSearcher.numUniqueWords(books))
+                    }
+                } else {
+                    println("[ERROR] Could not process STAT_OPTION.")
+                    println("Current list of recognized options: UNIQUE_WORDS.")
                 }
             case other => println("[ERROR] Unrecognized command: " + other + "\nType `help' for a list of commands.")
         }

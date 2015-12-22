@@ -53,4 +53,39 @@ object SparkSearcher {
         
         return wordDist.slice(0, math.min(limit, wordDist.length))
     }
+    
+    /**
+     * Returns the number of unique words that appear within the set of books BOOKS.
+     * For the moment, capitalized words are treated differently than non-capitalized words.
+     */
+    def numUniqueWords(books: Array[RDD[String]]): Long = {
+        if (books.length > 0) {
+            // Initial words (i.e. words from the first book)
+            var words: RDD[String] = books(0).flatMap(line => {
+                val wordPattern = "[a-zA-Z']+".r
+                for (word <- wordPattern.findAllMatchIn(line)) yield {
+                    word.matched
+                }
+            })
+            
+            words = words.distinct()
+            
+            // The rest of the words
+            for (i <- 1 to books.length - 1) {
+                var singleBkWords: RDD[String] = books(i).flatMap(line => {
+                    val wordPattern = "[a-zA-Z']+".r
+                    for (word <- wordPattern.findAllMatchIn(line)) yield {
+                        word.matched
+                    }
+                })
+            
+                words = words.union(singleBkWords)
+                words = words.distinct()
+            }
+        
+            return words.count()
+        } else {
+            return 0
+        }
+    }
 }
