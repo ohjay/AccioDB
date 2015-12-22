@@ -25,7 +25,12 @@ object SparkSearcher {
     
     /**
      * Returns a frequency distribution for the most common words in BOOK.
-     * This distribution will be given as a map of the form { word: frequency }.
+     * This distribution will be given as an array of the form [ (word, frequency) ].
+     *
+     * Restricts output to a maximum of LIMIT words.
+     * If ASC (short for "ascending") is specified, the distribution will prioritize
+     * the least common words. Otherwise, the distribution will prioritize the most
+     * common words.
      */
     def getWordDist(book: RDD[String], limit: Int = 100, asc: Boolean = false): Array[(String, Int)] = {
         // Map words to counts
@@ -46,6 +51,6 @@ object SparkSearcher {
             wordDist = wordDist.sortWith((wf1, wf2) => wf1._2 > wf2._2)
         }
         
-        return wordDist.slice(0, limit)
+        return wordDist.slice(0, math.min(limit, wordDist.length))
     }
 }

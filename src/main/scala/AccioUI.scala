@@ -189,10 +189,11 @@ object AccioUI {
                                 |Ex. usage) count -b 1 Fluffy <-- counts the # of 'Fluffy's in book 1
                                 |Ex. usage) count -b 5 Harry shouted <-- counts the # of 'Harry shouted's in book 5""".stripMargin)
                         case "word_dist" => println("""Usage: word_dist [-a] [-n top_n_words] BOOK_NUM
-                                |Ranks words by frequency of appearance. If the [-n top_n_words] option
-                                |is specified, limits output to the N most common words. Also, if the
-                                |[-a] flag is used, then the output will be sorted in ascending order.
-                                |(That is, the least common words will appear first.)
+                                |Ranks words by frequency of appearance.
+                                |- If the [-n top_n_words] option is specified, limits output to the N 
+                                |  most common words.
+                                |- If the [-a] flag is used, then the output will be sorted in ascending order. 
+                                |  (That is, the least common words will appear first.)
                                 |
                                 |The default word limit is 100 words.
                                 |
