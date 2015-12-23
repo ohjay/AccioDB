@@ -68,7 +68,7 @@ object SparkSearcher {
      * Returns a frequency distribution for the most common words in books 1-7.
      * Similarly to getWordDist, the output is an array of the form [ (word, frequency) ].
      * 
-     * For the present, no options can be selected.
+     * At the present time, no options can be selected.
      * Output will be restricted to the top 200 words.
      */
     def getWordDistAll(books: Array[RDD[String]]): Array[(String, Int)] = {

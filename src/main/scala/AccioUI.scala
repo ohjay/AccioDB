@@ -182,44 +182,43 @@ object AccioUI {
                     // The user presumably wants information about a specific command
                     tokens(0) match {
                         case "quit" => println("""Usage: quit
-                                |Quits the program. When this happens,
-                                |the prompt will disappear and all session data will be lost.""".stripMargin)
+                                |Quits the program. When this happens, the prompt will disappear
+                                |and all session data will be lost.""".stripMargin)
                         case "exit" => println("""Usage: exit
                                 |Quits the program. The prompt will disappear and all session data
                                 |will be lost. This action is identical to that of the 'quit' command.""".stripMargin)
                         case "count" => println("""Usage: count [-b book_num] PHRASE
-                                |If the [-b booknum] option is specified, searches the given book (#1 to #7)
+                                |If the [-b book_num] option is specified, searches the given book (#1 to #7)
                                 |for PHRASE and displays the number of appearances within that one book. 
-                                |Otherwise (if no -b flag), counts the number of times PHRASE occurs 
-                                |throughout all seven books.
+                                |Otherwise (if no -b flag), counts the number of times PHRASE occurs throughout
+                                |all seven books.
                                 |
                                 |Ex. usage) count -b 1 Fluffy <-- counts the # of 'Fluffy's in book 1
                                 |Ex. usage) count -b 5 Harry shouted <-- counts the # of 'Harry shouted's in book 5""".stripMargin)
                         case "word_dist" => println("""Usage: word_dist [-a] [-n top_n_words] BOOK_NUM
                                 |Ranks words by frequency of appearance.
-                                |- If the [-n top_n_words] option is specified, limits output to the N 
-                                |  most common words.
+                                |- If [-n top_n_words] is specified, limits output to the N most common words.
                                 |- If the [-a] flag is used, then the output will be sorted in ascending order. 
                                 |  (That is, the least common words will appear first.)
-                                |- You can also specify "all" as an option (à la `word_dist all`)
+                                |- You can also specify 'all' as an option (à la `word_dist all`)
                                 |  to see the 200 most frequently-appearing words among all 
-                                |  seven books. No other options can be used simultaneously with "all".
+                                |  seven books. No other options can be used simultaneously with 'all'.
                                 |
-                                |The default word limit is 100 words.
+                                |When not using 'all', the default word limit is 100 words.
                                 |
                                 |Ex. usage) word_dist -n 20 3 <-- lists the 20 most common words in PoA
                                 |Ex. usage) word_dist 4 <-- lists the 100 most common words in GoF
                                 |Ex. usage) word_dist -an 9 2 <-- lists the 9 least common words in CoS
                                 |Ex. usage) word_dist -a -n 15 2 <-- lists the 15 least common words in CoS
                                 |Ex. usage) word_dist -a 7 <-- lists the 100 least common words in DH
-                                |Ex. usage) word_dist all <-- 200 most common words in books 1-7""".stripMargin)
+                                |Ex. usage) word_dist all <-- lists the 200 most common words in books 1-7""".stripMargin)
                         case "stat" => println("""Usage: stat STAT_OPTION
                                 |Prints text-related statistics.
-                                |The statistic displayed will depend on STAT_OPTION.
+                                |The actual statistic displayed will depend on STAT_OPTION.
                                 |
                                 |Stat options include:
                                 |- UNIQUE_WORDS: Returns the number of unique words throughout all seven books.
-                                |- UNIQUE_WORDS [booknum]: Returns the number of unique words within book BOOK_NUM.
+                                |- UNIQUE_WORDS [book_num]: Returns the number of unique words within book BOOK_NUM.
                                 |
                                 |Ex. usage) stat UNIQUE_WORDS <-- outputs the number of unique words throughout all 7 books
                                 |Ex. usage) stat UNIQUE_WORDS 5 <-- outputs the number of unique words in OotP""".stripMargin)
