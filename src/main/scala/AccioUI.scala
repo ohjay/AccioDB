@@ -18,6 +18,10 @@ object AccioUI {
             |word_dist [-a] [-n top_n_words] BOOK_NUM: Lists words by frequency of appearance in a given book.
             |stat STAT_OPTION: Prints statistics related to the book text.""".stripMargin
     
+    //================================================================================
+    // Main subroutine (read/eval/print cycle)
+    //================================================================================
+    
     /**
      * Launches the program. Contains the outermost logic for the read-eval-print loop.
      * Interprets commands, executes them, and outputs the results.
@@ -30,7 +34,7 @@ object AccioUI {
         val br: BufferedReader = Console.in
         var line: String = br.readLine()
         while (line != "y" && line != "n") {
-            print("Please enter 'y' or 'n': ")
+            print("Please enter `y' or `n': ")
             line = br.readLine()
         }
         
@@ -71,6 +75,10 @@ object AccioUI {
         }
     }
     
+    //================================================================================
+    // Utility subroutines
+    //================================================================================
+    
     /**
      * Attempts to parse TOKEN as a book number.
      * If successful, that book number will be returned as an integer.
@@ -86,13 +94,13 @@ object AccioUI {
         try {
             bookNum = token.toInt
         } catch {
-            case e: Exception => println("[ERROR] book_num must be an integer.\n")
+            case e: Exception => println("[ERROR] book_num must be an integer.")
             return -1
         }
         
         if (bookNum < 1 || bookNum > 7) {
             // That's not a Harry Potter book!
-            println("[ERROR] book_num must be an integer between 1 and 7.\n")
+            println("[ERROR] book_num must be an integer between 1 and 7.")
             return -1
         }
         
@@ -110,7 +118,7 @@ object AccioUI {
         try {
             limit = token.toInt
         } catch {
-            case e: Exception => println("[ERROR] top_n_words must be an integer.\n")
+            case e: Exception => println("[ERROR] top_n_words must be an integer.")
             return -1
         }
         
@@ -169,6 +177,216 @@ object AccioUI {
         }
     }
     
+    //================================================================================
+    // Action subroutines
+    //================================================================================
+    
+    /**
+     * Executes the 'help' command.
+     */
+    def doHelp(tokens: Array[String]) {
+        if (tokens.length > 0) {
+            // The user presumably wants information about a specific command
+            tokens(0) match {
+                case "quit" => println("""Usage: quit
+                        |Quits the program. When this happens, the prompt will disappear
+                        |and all session data will be lost.""".stripMargin)
+                case "exit" => println("""Usage: exit
+                        |Quits the program. The prompt will disappear and all session data
+                        |will be lost. This action is identical to that of the `quit' command.""".stripMargin)
+                case "count" => println("""Usage: count [-b book_num] PHRASE
+                        |If the [-b book_num] option is specified, searches the given book (#1 to #7)
+                        |for PHRASE and displays the number of appearances within that one book. 
+                        |Otherwise (if no -b flag), counts the number of times PHRASE occurs throughout
+                        |all seven books.
+                        |
+                        |Ex. usage) count -b 1 Fluffy <-- counts the # of `Fluffy's in book 1
+                        |Ex. usage) count -b 5 Harry shouted <-- counts the # of `Harry shouted's in book 5""".stripMargin)
+                case "word_dist" => println("""Usage: word_dist [-a] [-n top_n_words] BOOK_NUM
+                        |Ranks words by frequency of appearance.
+                        |- If [-n top_n_words] is specified, limits output to the N most common words.
+                        |- If the [-a] flag is used, then the output will be sorted in ascending order. 
+                        |  (That is, the least common words will appear first.)
+                        |- You can also specify `all' as an option (à la `word_dist all`)
+                        |  to see the 200 most frequently-appearing words among all 
+                        |  seven books. No other options can be used simultaneously with `all'.
+                        |
+                        |When not using `all', the default word limit is 100 words.
+                        |
+                        |Ex. usage) word_dist -n 20 3 <-- lists the 20 most common words in PoA
+                        |Ex. usage) word_dist 4 <-- lists the 100 most common words in GoF
+                        |Ex. usage) word_dist -an 9 2 <-- lists the 9 least common words in CoS
+                        |Ex. usage) word_dist -a -n 15 2 <-- lists the 15 least common words in CoS
+                        |Ex. usage) word_dist -a 7 <-- lists the 100 least common words in DH
+                        |Ex. usage) word_dist all <-- lists the 200 most common words in books 1-7""".stripMargin)
+                case "stat" => println("""Usage: stat STAT_OPTION
+                        |Prints text-related statistics.
+                        |The actual statistic displayed will depend on STAT_OPTION.
+                        |
+                        |Stat options include:
+                        |- UNIQUE_WORDS: Returns the number of unique words throughout all seven books.
+                        |- UNIQUE_WORDS [book_num]: Returns the number of unique words within book BOOK_NUM.
+                        |
+                        |Ex. usage) stat UNIQUE_WORDS <-- outputs the number of unique words throughout all 7 books
+                        |Ex. usage) stat UNIQUE_WORDS 5 <-- outputs the number of unique words in OotP""".stripMargin)
+                case other => println(s"""Unrecognized command: ${other}.
+                        |Displaying general help string:
+                        |
+                        |$helpStr""".stripMargin)
+            }
+        } else {
+            println(helpStr) // general help string
+        }
+    }
+    
+    /**
+     * Executes the 'count' command.
+     */
+    def doCount(tokens: Array[String], books: Array[RDD[String]]) {
+        if (tokens.length >= 3 && tokens(0) == "-b") {
+            var bookNum: Int = parseBookNum(tokens(1))
+            if (bookNum == -1) {
+                // The error message should already have been displayed
+                // But the point is that there WAS an error. So we're done here
+                return
+            }
+            
+            println(SparkSearcher.count(Array(books(bookNum - 1)), tokens.drop(2).mkString(" ")))
+        } else if (tokens.length == 0) {
+            println("[ERROR] Usage: count [-b book_num] PHRASE")
+        } else {
+            println(SparkSearcher.count(books, tokens.mkString(" ")))
+        }
+    }
+    
+    /**
+     * Executes the 'word_dist' command.
+     */
+    def doWordDist(tokens: Array[String], books: Array[RDD[String]]) {
+        try {
+            if (tokens(0) == "all") {
+                printWordDist(SparkSearcher.getWordDistAll(books), 100)
+                return
+            } else if (tokens.length > 1) {
+                // That is, if there's a chance that there are flags
+                if (tokens(0) == "-n") {
+                    var limit: Int = parseLimit(tokens(1))
+                    if (limit == -1) {
+                        return
+                    }
+                
+                    var bookNum: Int = 1
+                    var wordDist: Array[(String, Int)] = null
+                
+                    // The user might still have specified the "ascending" option
+                    if (tokens(2) == "-a") {
+                        bookNum = parseBookNum(tokens(3))
+                        if (bookNum == -1) {
+                            return
+                        }
+                    
+                        wordDist = SparkSearcher.getWordDist(books(bookNum - 1), limit, true)
+                    } else {
+                        bookNum = parseBookNum(tokens(2))
+                        if (bookNum == -1) {
+                            return
+                        }
+                    
+                        wordDist = SparkSearcher.getWordDist(books(bookNum - 1), limit)
+                    }
+                
+                    printWordDist(wordDist, bookNum)
+                    return
+                } else if (tokens(0) == "-a") {
+                    // See if the user is also trying to use the -n flag
+                    if (tokens(1) == "-n") {
+                        var limit: Int = parseLimit(tokens(2))
+                        if (limit == -1) {
+                            return
+                        }
+                    
+                        var bookNum: Int = parseBookNum(tokens(3))
+                        if (bookNum == -1) {
+                            return
+                        }
+                    
+                        printWordDist(SparkSearcher.getWordDist(books(bookNum - 1), limit, true), bookNum)
+                    } else {
+                        var bookNum: Int = parseBookNum(tokens(1))
+                        if (bookNum == -1) {
+                            return
+                        }
+                    
+                        printWordDist(SparkSearcher.getWordDist(books(bookNum - 1), 100, true), bookNum)
+                    }
+                
+                    return
+                } else if (tokens(0) == "-an" || tokens(0) == "-na") {
+                    var limit: Int = parseLimit(tokens(1))
+                    if (limit == -1) {
+                        return
+                    }
+                
+                    var bookNum: Int = parseBookNum(tokens(2))
+                    if (bookNum == -1) {
+                        return
+                    }
+                
+                    printWordDist(SparkSearcher.getWordDist(books(bookNum - 1), limit, true), bookNum)
+                    return
+                }
+            }
+        
+            // Here, we'll proceed as if there are no flags
+            if (tokens.length == 0) {
+                println("[ERROR] Usage: word_dist [-a] [-n top_n_words] BOOK_NUM")
+            } else {
+                var bookNum: Int = parseBookNum(tokens(0))
+                if (bookNum == -1) {
+                    // Bad input!
+                    return
+                }
+            
+                printWordDist(SparkSearcher.getWordDist(books(bookNum - 1)), bookNum)
+            }
+        } catch {
+            case e: ArrayIndexOutOfBoundsException => 
+                println("[ERROR] Usage: word_dist [-a] [-n top_n_words] BOOK_NUM")
+        }
+    }
+    
+    /**
+     * Executes the 'stat' command.
+     */
+    def doStat(tokens: Array[String], books: Array[RDD[String]]) {
+        if (tokens.length == 0) {
+            println("[ERROR] Usage: stat STAT_OPTION")
+            println("STAT_OPTION is required!")
+        } else if (tokens(0) == "UNIQUE_WORDS") {
+            // Display the number of unique words throughout certain HP books
+            if (tokens.length > 1) {
+                // That is, if the user is trying to specify a single book number
+                val bookNum: Int = parseBookNum(tokens(1))
+                if (bookNum == -1) {
+                    return
+                }
+                
+                println(SparkSearcher.numUniqueWords(Array(books(bookNum - 1))))
+            } else {
+                // That is, if the user is trying to say "give me the # of unique words in ALL books"
+                println(SparkSearcher.numUniqueWords(books))
+            }
+        } else {
+            // Unrecognized option!
+            println("[ERROR] Could not process " + tokens(0) + ".")
+            println("Current list of recognized options: UNIQUE_WORDS.")
+        }
+    }
+    
+    //================================================================================
+    // Wrapper for command execution
+    //================================================================================
+    
     /**
      * Executes user commands.
      * Takes in a command and that command's arguments, and processes these tokens
@@ -176,194 +394,18 @@ object AccioUI {
      */
     def executeCommand(command: String, tokens: Array[String], books: Array[RDD[String]]) {
         command match {
-            case "quit" | "exit" => shouldQuit = true
+            case "quit" | "exit" => 
+                shouldQuit = true
             case "help" => 
-                if (tokens.length > 0) {
-                    // The user presumably wants information about a specific command
-                    tokens(0) match {
-                        case "quit" => println("""Usage: quit
-                                |Quits the program. When this happens, the prompt will disappear
-                                |and all session data will be lost.""".stripMargin)
-                        case "exit" => println("""Usage: exit
-                                |Quits the program. The prompt will disappear and all session data
-                                |will be lost. This action is identical to that of the 'quit' command.""".stripMargin)
-                        case "count" => println("""Usage: count [-b book_num] PHRASE
-                                |If the [-b book_num] option is specified, searches the given book (#1 to #7)
-                                |for PHRASE and displays the number of appearances within that one book. 
-                                |Otherwise (if no -b flag), counts the number of times PHRASE occurs throughout
-                                |all seven books.
-                                |
-                                |Ex. usage) count -b 1 Fluffy <-- counts the # of 'Fluffy's in book 1
-                                |Ex. usage) count -b 5 Harry shouted <-- counts the # of 'Harry shouted's in book 5""".stripMargin)
-                        case "word_dist" => println("""Usage: word_dist [-a] [-n top_n_words] BOOK_NUM
-                                |Ranks words by frequency of appearance.
-                                |- If [-n top_n_words] is specified, limits output to the N most common words.
-                                |- If the [-a] flag is used, then the output will be sorted in ascending order. 
-                                |  (That is, the least common words will appear first.)
-                                |- You can also specify 'all' as an option (à la `word_dist all`)
-                                |  to see the 200 most frequently-appearing words among all 
-                                |  seven books. No other options can be used simultaneously with 'all'.
-                                |
-                                |When not using 'all', the default word limit is 100 words.
-                                |
-                                |Ex. usage) word_dist -n 20 3 <-- lists the 20 most common words in PoA
-                                |Ex. usage) word_dist 4 <-- lists the 100 most common words in GoF
-                                |Ex. usage) word_dist -an 9 2 <-- lists the 9 least common words in CoS
-                                |Ex. usage) word_dist -a -n 15 2 <-- lists the 15 least common words in CoS
-                                |Ex. usage) word_dist -a 7 <-- lists the 100 least common words in DH
-                                |Ex. usage) word_dist all <-- lists the 200 most common words in books 1-7""".stripMargin)
-                        case "stat" => println("""Usage: stat STAT_OPTION
-                                |Prints text-related statistics.
-                                |The actual statistic displayed will depend on STAT_OPTION.
-                                |
-                                |Stat options include:
-                                |- UNIQUE_WORDS: Returns the number of unique words throughout all seven books.
-                                |- UNIQUE_WORDS [book_num]: Returns the number of unique words within book BOOK_NUM.
-                                |
-                                |Ex. usage) stat UNIQUE_WORDS <-- outputs the number of unique words throughout all 7 books
-                                |Ex. usage) stat UNIQUE_WORDS 5 <-- outputs the number of unique words in OotP""".stripMargin)
-                        case other => println(s"""Unrecognized command: ${other}.
-                                |Displaying general help string:
-                                |
-                                |$helpStr""".stripMargin)
-                    }
-                } else {
-                    println(helpStr) // general help string
-                }
+                doHelp(tokens)
             case "count" => 
-                if (tokens.length >= 3 && tokens(0) == "-b") {
-                    var bookNum: Int = parseBookNum(tokens(1))
-                    if (bookNum == -1) {
-                        // The error message should already have been displayed
-                        // But the point is that there WAS an error. So we're done here
-                        return
-                    }
-                    
-                    println(SparkSearcher.count(Array(books(bookNum - 1)), tokens.drop(2).mkString(" ")))
-                } else if (tokens.length == 0) {
-                    println("[ERROR] Usage: count [-b book_num] PHRASE")
-                } else {
-                    println(SparkSearcher.count(books, tokens.mkString(" ")))
-                }
+                doCount(tokens, books)
             case "word_dist" =>
-                try {
-                    if (tokens(0) == "all") {
-                        printWordDist(SparkSearcher.getWordDistAll(books), 100)
-                        println() // formatting, yknow?
-                        return
-                    } else if (tokens.length > 1) {
-                        // That is, if there's a chance that there are flags
-                        if (tokens(0) == "-n") {
-                            var limit: Int = parseLimit(tokens(1))
-                            if (limit == -1) {
-                                return
-                            }
-                        
-                            var bookNum: Int = 1
-                            var wordDist: Array[(String, Int)] = null
-                        
-                            // The user might still have specified the "ascending" option
-                            if (tokens(2) == "-a") {
-                                bookNum = parseBookNum(tokens(3))
-                                if (bookNum == -1) {
-                                    return
-                                }
-                            
-                                wordDist = SparkSearcher.getWordDist(books(bookNum - 1), limit, true)
-                            } else {
-                                bookNum = parseBookNum(tokens(2))
-                                if (bookNum == -1) {
-                                    return
-                                }
-                            
-                                wordDist = SparkSearcher.getWordDist(books(bookNum - 1), limit)
-                            }
-                        
-                            printWordDist(wordDist, bookNum)
-                            println()
-                            return
-                        } else if (tokens(0) == "-a") {
-                            // See if the user is also trying to use the -n flag
-                            if (tokens(1) == "-n") {
-                                var limit: Int = parseLimit(tokens(2))
-                                if (limit == -1) {
-                                    return
-                                }
-                            
-                                var bookNum: Int = parseBookNum(tokens(3))
-                                if (bookNum == -1) {
-                                    return
-                                }
-                            
-                                printWordDist(SparkSearcher.getWordDist(books(bookNum - 1), limit, true), bookNum)
-                            } else {
-                                var bookNum: Int = parseBookNum(tokens(1))
-                                if (bookNum == -1) {
-                                    return
-                                }
-                            
-                                printWordDist(SparkSearcher.getWordDist(books(bookNum - 1), 100, true), bookNum)
-                            }
-                        
-                            println()
-                            return
-                        } else if (tokens(0) == "-an" || tokens(0) == "-na") {
-                            var limit: Int = parseLimit(tokens(1))
-                            if (limit == -1) {
-                                return
-                            }
-                        
-                            var bookNum: Int = parseBookNum(tokens(2))
-                            if (bookNum == -1) {
-                                return
-                            }
-                        
-                            printWordDist(SparkSearcher.getWordDist(books(bookNum - 1), limit, true), bookNum)
-                            println()
-                            return
-                        }
-                    }
-                
-                    // Here, we'll proceed as if there are no flags
-                    if (tokens.length == 0) {
-                        println("[ERROR] Usage: word_dist [-a] [-n top_n_words] BOOK_NUM")
-                    } else {
-                        var bookNum: Int = parseBookNum(tokens(0))
-                        if (bookNum == -1) {
-                            // Bad input!
-                            return
-                        }
-                    
-                        printWordDist(SparkSearcher.getWordDist(books(bookNum - 1)), bookNum)
-                    }
-                } catch {
-                    case e: ArrayIndexOutOfBoundsException => 
-                        println("[ERROR] Usage: word_dist [-a] [-n top_n_words] BOOK_NUM")
-                }
+                doWordDist(tokens, books)
             case "stat" =>
-                if (tokens.length == 0) {
-                    println("[ERROR] Usage: stat STAT_OPTION")
-                    println("STAT_OPTION is required!")
-                } else if (tokens(0) == "UNIQUE_WORDS") {
-                    // Display the number of unique words throughout certain HP books
-                    if (tokens.length > 1) {
-                        // That is, if the user is trying to specify a single book number
-                        val bookNum: Int = parseBookNum(tokens(1))
-                        if (bookNum == -1) {
-                            return
-                        }
-                        
-                        println(SparkSearcher.numUniqueWords(Array(books(bookNum - 1))))
-                    } else {
-                        // That is, if the user is trying to say "give me the # of unique words in ALL books"
-                        println(SparkSearcher.numUniqueWords(books))
-                    }
-                } else {
-                    // Unrecognized option!
-                    println("[ERROR] Could not process " + tokens(0) + ".")
-                    println("Current list of recognized options: UNIQUE_WORDS.")
-                }
-            case other => println("[ERROR] Unrecognized command: " + other + "\nType `help' for a list of commands.")
+                doStat(tokens, books)
+            case other => 
+                println("[ERROR] Unrecognized command: " + other + "\nType `help' for a list of commands.")
         }
         
         if (!shouldQuit) {

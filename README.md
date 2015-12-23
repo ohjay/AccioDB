@@ -1,4 +1,4 @@
-# AccioDB
+# AccioDB [v1.1]
 AccioDB is an easy-to-use query interface for Harry Potter book data, conceived as an exercise in both Scala programming and Apache Spark's distributed processing facilities.
 
 ## Features; Implementation
