@@ -24,7 +24,22 @@ object SparkSearcher {
     }
     
     /**
-     * Returns a frequency distribution for the most common words in BOOK.
+     * Maps words to counts. Returns an RDD of (word, 1) pairs from BOOK.
+     * The RDD will NOT have been reduced, so there will be multiple occurrences of words.
+     */
+    def getWordFrequencies(book: RDD[String]): RDD[(String, Int)] = {
+        var tempRDD: RDD[(String, Int)] = book.flatMap(line => {
+            val wordPattern = "[a-zA-Z']+".r
+            for (word <- wordPattern.findAllMatchIn(line)) yield {
+                (word.matched, 1) 
+            }
+        })
+        
+        return tempRDD
+    }
+    
+    /**
+     * Returns a frequency distribution for the most (or least) common words in BOOK.
      * This distribution will be given as an array of the form [ (word, frequency) ].
      *
      * Restricts output to a maximum of LIMIT words.
@@ -33,16 +48,11 @@ object SparkSearcher {
      * common words.
      */
     def getWordDist(book: RDD[String], limit: Int = 100, asc: Boolean = false): Array[(String, Int)] = {
-        // Map words to counts
-        var tempRDD: RDD[(String, Int)] = book.flatMap(line => {
-            val wordPattern = "[a-zA-Z']+".r
-            for (word <- wordPattern.findAllMatchIn(line)) yield {
-                (word.matched, 1) 
-            }
-        })
+        // Create a (word, 1) pair for every word in the book
+        var tempRDD: RDD[(String, Int)] = getWordFrequencies(book)
         
         // Reduce by key and convert intermediate RDD into an array
-        var wordDist: Array[(String, Int)] = tempRDD.reduceByKey(_ + _).collect();
+        var wordDist: Array[(String, Int)] = tempRDD.reduceByKey(_ + _).collect()
         
         // Sort the array
         if (asc) { // ...in ascending order of frequency
@@ -55,30 +65,51 @@ object SparkSearcher {
     }
     
     /**
+     * Returns a frequency distribution for the most common words in books 1-7.
+     * Similarly to getWordDist, the output is an array of the form [ (word, frequency) ].
+     * 
+     * For the present, no options can be selected.
+     * Output will be restricted to the top 200 words.
+     */
+    def getWordDistAll(books: Array[RDD[String]]): Array[(String, Int)] = {
+        var tempRDD: RDD[(String, Int)] = getWordFrequencies(books(0))
+        for (i <- 1 to books.length - 1) {
+            tempRDD = tempRDD.union(getWordFrequencies(books(i)))
+        }
+        
+        var wordDist: Array[(String, Int)] = tempRDD.reduceByKey(_ + _).collect()
+        wordDist = wordDist.sortWith((wf1, wf2) => wf1._2 > wf2._2)
+        return wordDist.slice(0, 200)
+    }
+    
+    /**
+     * Returns an RDD of words from the book BOOK.
+     * Words are defined as character groups containing letters and single quotation marks.
+     */
+    def getWordsFromBook(book: RDD[String]): RDD[String] = {
+        var words: RDD[String] = book.flatMap(line => {
+            val wordPattern = "[a-zA-Z']+".r
+            for (word <- wordPattern.findAllMatchIn(line)) yield {
+                word.matched
+            }
+        })
+        
+        return words
+    }
+    
+    /**
      * Returns the number of unique words that appear within the set of books BOOKS.
      * For the moment, capitalized words are treated differently than non-capitalized words.
      */
     def numUniqueWords(books: Array[RDD[String]]): Long = {
         if (books.length > 0) {
             // Initial words (i.e. words from the first book)
-            var words: RDD[String] = books(0).flatMap(line => {
-                val wordPattern = "[a-zA-Z']+".r
-                for (word <- wordPattern.findAllMatchIn(line)) yield {
-                    word.matched
-                }
-            })
-            
+            var words: RDD[String] = getWordsFromBook(books(0))
             words = words.distinct()
             
             // The rest of the words
             for (i <- 1 to books.length - 1) {
-                var singleBkWords: RDD[String] = books(i).flatMap(line => {
-                    val wordPattern = "[a-zA-Z']+".r
-                    for (word <- wordPattern.findAllMatchIn(line)) yield {
-                        word.matched
-                    }
-                })
-            
+                var singleBkWords: RDD[String] = getWordsFromBook(books(i))
                 words = words.union(singleBkWords)
                 words = words.distinct()
             }

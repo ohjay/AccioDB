@@ -123,6 +123,10 @@ object AccioUI {
      * so to avoid redundancy we'll only return the last portion of a title.
      *
      * For example, if you passed in a 2, you would get "Chamber of Secrets" as the title.
+     * 
+     * Special cases:
+     * - 100: the code for "all books"
+     * - anything else that's not 1-7: invalid
      */
     def getBookTitle(bookNum: Int): String = {
         var title: String = bookNum match {
@@ -140,6 +144,8 @@ object AccioUI {
                 "Half-Blood Prince"
             case 7 =>
                 "Deathly Hallows"
+            case 100 =>
+                "all books"
             case other =>
                 "[ERROR] Invalid book number!"
         }
@@ -195,14 +201,18 @@ object AccioUI {
                                 |  most common words.
                                 |- If the [-a] flag is used, then the output will be sorted in ascending order. 
                                 |  (That is, the least common words will appear first.)
+                                |- You can also specify "all" as an option (à la `word_dist all`)
+                                |  to see the 200 most frequently-appearing words among all 
+                                |  seven books. No other options can be used simultaneously with "all".
                                 |
                                 |The default word limit is 100 words.
                                 |
                                 |Ex. usage) word_dist -n 20 3 <-- lists the 20 most common words in PoA
                                 |Ex. usage) word_dist 4 <-- lists the 100 most common words in GoF
                                 |Ex. usage) word_dist -an 9 2 <-- lists the 9 least common words in CoS
-                                |Ex. usage) word_Dist -a -n 15 2 <-- lists the 15 least common words in CoS
-                                |Ex. usage) word_Dist -a 7 <-- lists the 100 least common words in DH""".stripMargin)
+                                |Ex. usage) word_dist -a -n 15 2 <-- lists the 15 least common words in CoS
+                                |Ex. usage) word_dist -a 7 <-- lists the 100 least common words in DH
+                                |Ex. usage) word_dist all <-- 200 most common words in books 1-7""".stripMargin)
                         case "stat" => println("""Usage: stat STAT_OPTION
                                 |Prints text-related statistics.
                                 |The statistic displayed will depend on STAT_OPTION.
@@ -238,7 +248,11 @@ object AccioUI {
                 }
             case "word_dist" =>
                 try {
-                    if (tokens.length > 1) {
+                    if (tokens(0) == "all") {
+                        printWordDist(SparkSearcher.getWordDistAll(books), 100)
+                        println() // formatting, yknow?
+                        return
+                    } else if (tokens.length > 1) {
                         // That is, if there's a chance that there are flags
                         if (tokens(0) == "-n") {
                             var limit: Int = parseLimit(tokens(1))
@@ -332,9 +346,9 @@ object AccioUI {
                     println("[ERROR] Usage: stat STAT_OPTION")
                     println("STAT_OPTION is required!")
                 } else if (tokens(0) == "UNIQUE_WORDS") {
-                    // In which we display the number of unique words within certain HP books
+                    // Display the number of unique words throughout certain HP books
                     if (tokens.length > 1) {
-                        // That is, if the user is trying to specify a book number
+                        // That is, if the user is trying to specify a single book number
                         val bookNum: Int = parseBookNum(tokens(1))
                         if (bookNum == -1) {
                             return
@@ -346,7 +360,8 @@ object AccioUI {
                         println(SparkSearcher.numUniqueWords(books))
                     }
                 } else {
-                    println("[ERROR] Could not process STAT_OPTION.")
+                    // Unrecognized option!
+                    println("[ERROR] Could not process " + tokens(0) + ".")
                     println("Current list of recognized options: UNIQUE_WORDS.")
                 }
             case other => println("[ERROR] Unrecognized command: " + other + "\nType `help' for a list of commands.")

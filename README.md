@@ -39,3 +39,6 @@ Once you have done this, AccioDB will run a bit of Spark setup and then you will
 
 ## Disclaimer
 Due to a bunch of legal stuff that I'm not about to get into, I'm not allowed to upload the actual Harry Potter books here. Thus in order for you to use AccioDB yourself, you would have to either **(a)** find the .txt files yourself online, or **(b)** type up the text of all seven books yourself. Sorry!
+
+## Bugs
+If you find any Rita Skeeters in my program, please let me know! It would be much appreciated.
