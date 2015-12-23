@@ -161,11 +161,11 @@ object AccioUI {
      */
     def printWordDist(wordDistribution: Array[(String, Int)], bookNum: Int) {
         println("=== WORD DISTRIBUTION for " + getBookTitle(bookNum).toUpperCase() + "===")
-        println("Format: [word] | [count]\n")
+        println("(Format: [word] | [count])\n")
         
         // Iterate through the distribution RDD
         for ((w, wfreq) <- wordDistribution) {
-            println(w + " | " + wfreq.toString)
+            println(f"$w%-16s" + "| " + wfreq.toString)
         }
     }
     
