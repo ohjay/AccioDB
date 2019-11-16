@@ -46,13 +46,11 @@ Once you have done this, AccioDB will run a bit of Spark setup and then you will
     </tr>
     <tr><td width="58%"><code>count the Whomping Willow # counts the number of occurrences of "the Whomping Willow" (output: 20)</code></td></tr>
     <tr><td width="58%"><code>count -b 5 Harry yelled # counts the number of times Harry yells in book 5 (output: 14)</code></td></tr>
-    
     <tr><th colspan="2" align="left">stat STAT_OPTION</th></tr>
     <tr>
         <td width="42%">Prints statistics related to the book text. Choice of statistic is dependent on STAT_OPTION.</td>
         <td width="58%"><code>stat UNIQUE_WORDS 6 # identifies the number of unique words in HBP (output: 12569)</code></td>
     </tr>
-    
     <tr><th colspan="2" align="left">word_dist [-a] [-n limit] BOOK#</th></tr>
     <tr>
         <td rowspan="3" width="42%">Lists the most or least common words in a book. Users can specify a limit for the number of words displayed; this limit defaults to 200. To survey the entire set of books, "all" should be passed in as BOOK#.</td>
@@ -60,13 +58,11 @@ Once you have done this, AccioDB will run a bit of Spark setup and then you will
     </tr>
     <tr><td width="58%"><code>word_dist -an 9 2 # lists the 9 least common words in CoS</code></td></tr>
     <tr><td width="58%"><code>word_dist all # lists the 200 most common words in books 1-7</code></td></tr>
-    
     <tr><th colspan="2" align="left">quit</th></tr>
     <tr>
         <td width="42%">Quits the program.</td>
         <td width="58%"><code>quit # guess what this does?</code></td>
     </tr>
-    
     <tr><th colspan="2" align="left">help [COMMAND]</th></tr>
     <tr>
         <td width="42%">Provides a list of commands/arguments.</td>
